@@ -1,0 +1,18 @@
+/Gemfile
+/Gemfile.lock
+/favicon.ico
+_site/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+dist/
+venv-www-project-agent-memory-guard/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+site/

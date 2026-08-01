@@ -1,0 +1,42 @@
+[project]
+name = "amg-mcp-server"
+version = "0.1.0"
+description = "OWASP Agent Memory Guard as an MCP server - runtime defense for AI agent memory stores"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "Vaishnavi Gudur", email = "vgudur.dev@gmail.com" },
+]
+keywords = ["mcp", "security", "ai-agents", "memory-poisoning", "owasp", "prompt-injection"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://owasp.org/www-project-agent-memory-guard/"
+Repository = "https://github.com/OWASP/www-project-agent-memory-guard"
+Issues = "https://github.com/OWASP/www-project-agent-memory-guard/issues"
+Documentation = "https://owasp.org/www-project-agent-memory-guard/"
+
+[project.scripts]
+amg-mcp-server = "amg_mcp_server.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/amg_mcp_server"]

@@ -1,0 +1,2 @@
+agent-memory-guard>=0.2.0
+pytest>=7.0

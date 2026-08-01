@@ -1,0 +1,104 @@
+site_name: OWASP Agent Memory Guard
+site_description: Runtime defense layer that protects AI agent memory from poisoning, injection, and manipulation attacks.
+site_url: https://owasp.github.io/www-project-agent-memory-guard/
+repo_url: https://github.com/OWASP/www-project-agent-memory-guard
+repo_name: OWASP/www-project-agent-memory-guard
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  logo: assets/shield-icon.svg
+  favicon: assets/shield-icon.svg
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: false
+            show_root_heading: true
+            heading_level: 3
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Configuration: getting-started/configuration.md
+  - CLI:
+      - Overview: cli/index.md
+      - amg scan: cli/scan.md
+      - amg serve: cli/serve.md
+      - amg check: cli/check.md
+  - API Server:
+      - Overview: api/index.md
+      - Endpoints: api/endpoints.md
+  - Detectors:
+      - Overview: detectors/index.md
+      - Prompt Injection: detectors/injection.md
+      - Sensitive Data Leakage: detectors/leakage.md
+      - Privilege Escalation: detectors/privilege-escalation.md
+      - Tool Abuse: detectors/tool-abuse.md
+      - Excessive Autonomy: detectors/excessive-autonomy.md
+      - Cross-Task Contamination: detectors/cross-task.md
+      - Self-Reinforcement: detectors/self-reinforcement.md
+      - ML-Based Detection: detectors/ml-detection.md
+  - Integrations:
+      - Overview: integrations/index.md
+      - LangChain: integrations/langchain.md
+      - CrewAI: integrations/crewai.md
+      - LlamaIndex: integrations/llamaindex.md
+      - GitHub Actions: integrations/github-actions.md
+  - Architecture:
+      - Design: architecture/design.md
+      - Threat Model: architecture/threat-model.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/OWASP/www-project-agent-memory-guard
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/agent-memory-guard/

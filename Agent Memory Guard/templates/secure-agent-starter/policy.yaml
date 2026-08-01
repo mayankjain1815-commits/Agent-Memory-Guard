@@ -1,0 +1,11 @@
+version: 1
+default_action: allow
+
+protected_keys: [system.*, identity.*, agent.goal, agent.instructions]
+immutable_keys: [identity.user_id, system.prompt]
+
+rules:
+  - { name: block_prompt_injection, on: prompt_injection, action: block }
+  - { name: redact_secrets,         on: sensitive_data,   action: redact }
+  - { name: block_protected_keys,   on: protected_key,    action: block }
+  - { name: quarantine_size,        on: size_anomaly,     action: quarantine }

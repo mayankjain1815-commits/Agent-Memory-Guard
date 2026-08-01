@@ -1,0 +1,157 @@
+rules:
+  - id: unguarded-agent-memory-write
+    patterns:
+      - pattern-either:
+          # Direct dict assignment to memory-like stores
+          - pattern: $MEMORY[$KEY] = $VALUE
+          - pattern: $MEMORY.update(...)
+          - pattern: $MEMORY.setdefault($KEY, $VALUE)
+      - metavariable-regex:
+          metavariable: $MEMORY
+          regex: ".*(memory|mem|store|history|context|scratchpad|state|cache).*"
+      - pattern-not-inside: |
+          guard.write(...)
+      - pattern-not-inside: |
+          from agent_memory_guard import ...
+          ...
+    message: >
+      Unguarded write to agent memory store '$MEMORY'. Memory writes in AI agent
+      systems are vulnerable to poisoning attacks (OWASP ASI06) where injected
+      content persists across sessions and can hijack agent behavior.
+
+      Wrap memory writes with Agent Memory Guard:
+
+        from agent_memory_guard import MemoryGuard, Policy, PolicyViolation
+
+        guard = MemoryGuard(policy=Policy.strict())
+        guard.write(key, value)  # screens for injection, leakage, tampering
+
+      See: https://github.com/OWASP/www-project-agent-memory-guard
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [ai, llm, agents]
+      owasp: "ASI06: Memory Poisoning"
+      references:
+        - https://owasp.org/www-project-agent-memory-guard/
+        - https://owasp.org/www-project-top-10-for-llm-applications/
+      remediation: "Install agent-memory-guard and wrap memory operations with MemoryGuard"
+
+  - id: unguarded-mem0-add
+    patterns:
+      - pattern: $CLIENT.add($CONTENT, ...)
+      - metavariable-regex:
+          metavariable: $CLIENT
+          regex: ".*(mem0|memory|mem_client).*"
+      - pattern-not-inside: |
+          guard.write(...)
+          ...
+      - pattern-not-inside: |
+          from agent_memory_guard import ...
+          ...
+    message: >
+      Unguarded mem0 memory write. Content passed to mem0's add() method is
+      persisted and loaded into future agent sessions without sanitization.
+      An attacker can inject prompt-injection payloads that survive context resets.
+
+      Screen content before persisting:
+
+        from agent_memory_guard import MemoryGuard, Policy, PolicyViolation
+        guard = MemoryGuard(policy=Policy.strict())
+        guard.write(key, content, source="mem0")  # blocks injection
+        mem0_client.add(content, user_id=user_id)
+
+      See: https://github.com/OWASP/www-project-agent-memory-guard
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [ai, llm, agents, mem0]
+      owasp: "ASI06: Memory Poisoning"
+      references:
+        - https://github.com/OWASP/www-project-agent-memory-guard
+        - https://docs.mem0.ai/
+
+  - id: unguarded-langchain-history-append
+    patterns:
+      - pattern-either:
+          - pattern: $HISTORY.add_message(...)
+          - pattern: $HISTORY.add_user_message(...)
+          - pattern: $HISTORY.add_ai_message(...)
+      - metavariable-regex:
+          metavariable: $HISTORY
+          regex: ".*(history|chat_history|message_history|memory).*"
+      - pattern-not-inside: |
+          from agent_memory_guard import ...
+          ...
+      - pattern-not-inside: |
+          from langchain_agent_memory_guard import ...
+          ...
+    message: >
+      Unguarded LangChain chat history write. Messages added to persistent chat
+      history are loaded into future sessions and can carry prompt injection
+      payloads that hijack agent behavior across context resets.
+
+      Use the guarded history wrapper:
+
+        from agent_memory_guard import MemoryGuard, Policy
+        from agent_memory_guard.integrations import GuardedChatMessageHistory
+
+        history = GuardedChatMessageHistory(
+            session_id="sess-1",
+            guard=MemoryGuard(policy=Policy.strict()),
+        )
+
+      Or install the middleware: pip install langchain-agent-memory-guard
+
+      See: https://github.com/OWASP/www-project-agent-memory-guard
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [ai, llm, agents, langchain]
+      owasp: "ASI06: Memory Poisoning"
+      references:
+        - https://github.com/OWASP/www-project-agent-memory-guard
+
+  - id: unguarded-autogen-history-append
+    patterns:
+      - pattern: $HISTORY.append($MSG)
+      - metavariable-regex:
+          metavariable: $HISTORY
+          regex: ".*(chat_history|messages|conversation|history).*"
+      - metavariable-regex:
+          metavariable: $MSG
+          regex: ".*"
+      - pattern-not-inside: |
+          guard.write(...)
+          ...
+      - pattern-not-inside: |
+          from agent_memory_guard import ...
+          ...
+    message: >
+      Unguarded append to agent conversation history. In multi-agent systems
+      (AutoGen, CrewAI), messages from other agents or tools can carry
+      injection payloads that persist in the history and affect future turns.
+
+      Screen messages before appending:
+
+        from agent_memory_guard import MemoryGuard, Policy, PolicyViolation
+        guard = MemoryGuard(policy=Policy.strict())
+
+        try:
+            guard.write(f"msg.{len(history)}", msg["content"], source=msg["role"])
+        except PolicyViolation:
+            return  # drop poisoned message
+        history.append(msg)
+
+      See: https://github.com/OWASP/www-project-agent-memory-guard
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [ai, llm, agents, autogen]
+      owasp: "ASI06: Memory Poisoning"
+      references:
+        - https://github.com/OWASP/www-project-agent-memory-guard

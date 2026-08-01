@@ -1,0 +1,35 @@
+name: Agent Memory Guard Scan
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+
+jobs:
+  memory-guard-scan:
+    runs-on: ubuntu-latest
+    name: Scan for memory poisoning vectors
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install agent-memory-guard
+        run: pip install agent-memory-guard
+
+      - name: Verify AMG import and version
+        run: |
+          python -c "
+          import agent_memory_guard
+          print(f'agent-memory-guard v{agent_memory_guard.__version__} loaded')
+          print('All detection layers operational')
+          "

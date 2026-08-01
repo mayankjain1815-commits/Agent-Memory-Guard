@@ -1,0 +1,110 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-memory-guard"
+version = "0.3.0"
+description = "Runtime defense layer that protects AI agent memory from poisoning, tool abuse, privilege escalation, and excessive autonomy (OWASP)."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+authors = [{ name = "OWASP Agent Memory Guard" }]
+keywords = [
+    "owasp",
+    "ai-security",
+    "llm",
+    "agents",
+    "memory-poisoning",
+    "asi06",
+    "prompt-injection",
+    "guardrails",
+    "ai-safety",
+    "agent-security",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Framework :: FastAPI",
+]
+dependencies = ["PyYAML>=6.0"]
+
+[project.scripts]
+amg = "agent_memory_guard.cli:main"
+
+[project.optional-dependencies]
+server = ["fastapi>=0.100", "uvicorn[standard]>=0.20", "pydantic>=2.0"]
+ml = ["transformers>=4.30", "torch>=2.0"]
+langchain = ["langchain-core>=0.1"]
+crewai = ["crewai>=0.1"]
+llamaindex = ["llama-index-core>=0.10"]
+all = [
+    "fastapi>=0.100",
+    "uvicorn[standard]>=0.20",
+    "pydantic>=2.0",
+    "transformers>=4.30",
+    "torch>=2.0",
+    "langchain-core>=0.1",
+]
+test = ["pytest>=7.0", "coverage>=7.0", "httpx>=0.24"]
+dev = ["ruff>=0.4", "mypy>=1.0", "coverage>=7.0", "pytest>=7.0", "httpx>=0.24"]
+docs = ["mkdocs>=1.5", "mkdocs-material>=9.0", "mkdocstrings[python]>=0.24"]
+
+[project.urls]
+Homepage = "https://owasp.org/www-project-agent-memory-guard/"
+Source = "https://github.com/OWASP/www-project-agent-memory-guard"
+Documentation = "https://owasp.org/www-project-agent-memory-guard/"
+Issues = "https://github.com/OWASP/www-project-agent-memory-guard/issues"
+Changelog = "https://github.com/OWASP/www-project-agent-memory-guard/releases"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501", "N818"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["agent_memory_guard"]
+omit = [
+    "*/integrations/crewai.py",
+    "*/integrations/llamaindex.py",
+    "*/integrations/langchain.py",
+    "*/integrations/__init__.py",
+    "*/metrics.py",
+    "*/cli.py",
+    "*/server.py",
+    "*/scanner/__init__.py",
+    "*/streaming.py",
+    "*/middleware.py",
+    "*/rag.py",
+    "*/scan.py",
+    "*/tools.py",
+    "*/detectors/ml_injection.py",
+    "*/detectors/anomaly.py",
+]
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true

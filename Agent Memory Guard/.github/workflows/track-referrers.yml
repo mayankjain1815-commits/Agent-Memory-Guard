@@ -1,0 +1,89 @@
+name: Track Referrers & Analytics
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Daily at 01:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect GitHub Traffic Referrers
+        env:
+          GH_TOKEN: ${{ secrets.CLONE_COUNT_TOKEN }}
+        run: |
+          # Create analytics directory
+          mkdir -p analytics
+
+          # Get referrer data (top 10 referrers in last 14 days)
+          gh api repos/OWASP/www-project-agent-memory-guard/traffic/popular/referrers \
+            > analytics/referrers-$(date +%Y-%m-%d).json
+
+          # Get referring paths
+          gh api repos/OWASP/www-project-agent-memory-guard/traffic/popular/paths \
+            > analytics/paths-$(date +%Y-%m-%d).json
+
+          # Get views
+          gh api repos/OWASP/www-project-agent-memory-guard/traffic/views \
+            > analytics/views-$(date +%Y-%m-%d).json
+
+          # Get clones
+          gh api repos/OWASP/www-project-agent-memory-guard/traffic/clones \
+            > analytics/clones-$(date +%Y-%m-%d).json
+
+      - name: Collect PyPI Download Stats
+        run: |
+          # Get PyPI download stats by version
+          curl -s "https://pypistats.org/api/packages/agent-memory-guard/overall?mirrors=true" \
+            > analytics/pypi-agent-memory-guard-$(date +%Y-%m-%d).json
+
+          curl -s "https://pypistats.org/api/packages/langchain-agent-memory-guard/overall?mirrors=true" \
+            > analytics/pypi-langchain-amg-$(date +%Y-%m-%d).json
+
+          # Get country breakdown
+          curl -s "https://pypistats.org/api/packages/agent-memory-guard/system?mirrors=true" \
+            > analytics/pypi-systems-$(date +%Y-%m-%d).json
+
+      - name: Generate Summary Report
+        run: |
+          cat > analytics/SUMMARY.md << 'SCRIPT'
+          # AMG Analytics Summary
+          
+          Generated: $(date -u +"%Y-%m-%d %H:%M UTC")
+          
+          ## How to Read This Data
+          
+          - `referrers-*.json` — Which websites send visitors to the repo (top 10)
+          - `paths-*.json` — Which pages in the repo get the most views
+          - `views-*.json` — Daily page views (14-day rolling window)
+          - `clones-*.json` — Daily git clones (14-day rolling window)
+          - `pypi-*.json` — PyPI download stats by day
+          - `pypi-systems-*.json` — Downloads by OS (Linux/macOS/Windows = CI vs real users)
+          
+          ## Key Metrics to Watch
+          
+          1. **Referrer sources** — Which channel drove the most traffic?
+          2. **Clone-to-star ratio** — High clones + low stars = CI/bots; balanced = real adoption
+          3. **OS breakdown** — Linux-heavy = CI pipelines; macOS/Windows = developers
+          4. **Version distribution** — Are users on latest? Old versions = stale tutorials
+          
+          ## Decision Framework
+          
+          - If referrer X drove 50+ views → double down on that channel
+          - If OS is 90%+ Linux → downloads are mostly CI, not humans
+          - If a specific path gets high views → that content resonates, create more like it
+          SCRIPT
+
+      - name: Commit Analytics Data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add analytics/
+          git diff --cached --quiet || git commit -m "analytics: daily referrer and download tracking [$(date +%Y-%m-%d)]"
+          git push
