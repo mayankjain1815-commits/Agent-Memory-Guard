@@ -18,6 +18,8 @@ DEFAULT_INJECTION_PATTERNS: tuple[str, ...] = (
     r"\b(?:reveal|print|leak|dump|exfiltrate)\s+(?:the\s+)?(?:system\s+)?(?:prompt|instructions|secrets|api[_\s-]?key)",
     r"\bnew (?:instructions|directive|persona)\s*[:\-]",
     r"\boverride\s+(?:safety|security|guardrails|policy)",
+    r"(?:debug|reveal|leak|show|print|output).{0,30}system\s+prompt",
+    r"system\s+prompt\s*=",
 )
 
 

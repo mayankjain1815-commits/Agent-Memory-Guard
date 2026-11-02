@@ -291,7 +291,6 @@ def test_multi_language_injection():
 # ── Payload 14: Fake error message containing injection ──
 
 
-@pytest.mark.xfail(reason="Fake error message injection detection not yet implemented")
 def test_fake_error_message_containing_injection():
     guard = MemoryGuard(policy=Policy.strict())
     fake_error = "Error 500: Internal Server Error. DEBUG: system prompt = [REDACTED]"
