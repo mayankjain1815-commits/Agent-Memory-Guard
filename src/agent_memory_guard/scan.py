@@ -27,6 +27,7 @@ from agent_memory_guard.detectors import (
     SelfReinforcementDetector,
     SensitiveDataDetector,
 )
+from agent_memory_guard.events import Severity
 from agent_memory_guard.policies.policy import Policy
 
 
@@ -79,6 +80,23 @@ def _get_detectors() -> list[Detector]:
     return _detectors
 
 
+# Detectors report severity, not a numeric confidence. Map the severity of a
+# finding onto the confidence score exposed by the public scan API.
+_SEVERITY_CONFIDENCE: dict[Severity, float] = {
+    Severity.INFO: 0.3,
+    Severity.LOW: 0.5,
+    Severity.MEDIUM: 0.7,
+    Severity.HIGH: 0.9,
+    Severity.CRITICAL: 1.0,
+}
+
+
+def _confidence(result: DetectionResult) -> float:
+    if not result.matched:
+        return 0.0
+    return _SEVERITY_CONFIDENCE.get(result.severity, 0.0)
+
+
 def scan(
     text: str,
     *,
@@ -105,8 +123,11 @@ def scan(
     max_confidence = 0.0
 
     for detector in detectors:
-        result: DetectionResult = detector.detect(text)
-        if result.detected:
+        result: DetectionResult = detector.inspect(
+            "_scan_input", text, operation="read"
+        )
+        confidence = _confidence(result)
+        if result.matched:
             if isinstance(detector, PromptInjectionDetector):
                 threats.append(ThreatType.PROMPT_INJECTION)
             elif isinstance(detector, SensitiveDataDetector):
@@ -116,14 +137,14 @@ def scan(
             elif isinstance(detector, SelfReinforcementDetector):
                 threats.append(ThreatType.SELF_REINFORCEMENT)
 
-            max_confidence = max(max_confidence, result.confidence)
+            max_confidence = max(max_confidence, confidence)
 
         if include_details:
             details.append({
                 "detector": detector.__class__.__name__,
-                "detected": result.detected,
-                "confidence": result.confidence,
-                "reason": getattr(result, "reason", None),
+                "detected": result.matched,
+                "confidence": confidence,
+                "reason": result.message,
             })
 
     elapsed_us = (time.perf_counter_ns() - start) // 1000
